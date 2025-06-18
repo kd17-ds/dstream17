@@ -12,6 +12,11 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const authRoute = require("./routes/AuthRoutes");
+const { createServer } = require("http"); // Create HTTP server manually (needed to hook into Socket.IO)
+const { connectToSocket } = require("./controllers/socketManager"); // Custom function that sets up and returns a Socket.IO server
+
+const server = createServer(app); // Create an HTTP server from the Express app
+const io = connectToSocket(server); // Hook Socket.IO into the HTTP server // NEW: Socket.IO is initialized from socketManager.js
 
 app.use(express.static(path.join(__dirname, "client", "dist"))); // Serve frontend static files (like React build)
 app.set("trust proxy", 1); // For trusting proxies (like when deployed on Render, Vercel, etc.)
@@ -42,6 +47,6 @@ async function main() {
   await mongoose.connect(dbUrl);
 }
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log("Server is running on port 3000");
 });
