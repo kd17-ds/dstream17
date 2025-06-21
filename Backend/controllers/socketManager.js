@@ -1,39 +1,47 @@
-// Import the Socket.IO server class
+// Import the Socket.IO server class to create a WebSocket server that works over an HTTP server
 const { Server } = require("socket.io");
 
-// In-memory storage for connections, chat messages, and online time
+// In-memory storage for tracking active socket connections, message history, and online time
 let connections = {}; // Stores connected users per room/path
 let messages = {}; // Stores chat messages per room/path
 let timeOnLine = {}; // Tracks when each user connected
 
 // Export a function to initialize and return a Socket.IO server instance
 exports.connectToSocket = (server) => {
-  // Attach socket.io to the HTTP server
-  const io = new Server(server);
+  // Attach socket.io to the HTTP server with CORS settings
+  const io = new Server(server, {
+    cors: {
+      origin: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+      credentials: true,
+    },
+  });
 
-  // When a client connects to the server
+  // Handle new WebSocket connection
   io.on("connection", (socket) => {
-    // Event: when a user accepts a call and joins a specific path/room
+    // Event: when a user accepts a call and joins a specific room/path
     socket.on("accept-call", (path) => {
-      // Initialize the path array if it doesn't exist yet
+      // Create an array for the path if it doesn't exist
       if (connections[path] === undefined) {
         connections[path] = [];
       }
-      // Save the connected socket ID to this path
+
+      // Store the socket ID in that path's connection list
       connections[path].push(socket.id);
-      // Save the connection time of this user
+
+      // Save the connection time for later reference
       timeOnLine[socket.id] = new Date();
 
-      // Inform all users in this path that a new user has joined
+      // Notify all users in the room that a new user joined
       for (let a = 0; a < connections[path].length; a++) {
         io.to(connections[path][a]).emit(
           "user-joined",
           socket.id,
-          connections[path] // Send list of all users in the room
+          connections[path] // Send the full list of users in the room
         );
       }
 
-      // If there are existing messages in this room, send them to the newly joined user
+      // Send chat history to the newly joined user if any
       if (messages[path] !== undefined) {
         for (let a = 0; a < messages[path].length; a++) {
           io.to(socket.id).emit(
@@ -46,14 +54,14 @@ exports.connectToSocket = (server) => {
       }
     });
 
-    // Event: signaling message used in WebRTC (like SDP/ICE)
+    // Event: signaling message for WebRTC (e.g., SDP or ICE info)
     socket.on("signaL", (told, message) => {
       io.to(told).emit("signal", socket.id, message);
     });
 
-    // Event: new chat message sent by a user
+    // Event: when a user sends a chat message
     socket.on("chat-message", (data, sender) => {
-      // Find the room this socket belongs to
+      // Find which room the sender belongs to
       const [matchingRoom, found] = Object.entries(connections).reduce(
         ([room, isFound], [roomKey, roomValue]) => {
           if (!isFound && roomValue.includes(socket.id)) {
@@ -64,13 +72,14 @@ exports.connectToSocket = (server) => {
         ["", false]
       );
 
-      // If user is in a valid room
+      // If the user is in a valid room
       if (found) {
+        // Initialize message history array if not already
         if (messages[matchingRoom] === undefined) {
           messages[matchingRoom] = [];
         }
 
-        // Save the message to history
+        // Store the message in the message history
         messages[matchingRoom].push({
           sender: sender,
           data: data,
@@ -79,20 +88,20 @@ exports.connectToSocket = (server) => {
 
         console.log("message", matchingRoom, data, sender);
 
-        // Broadcast the new message to all users in the room
+        // Send the message to everyone in the room
         connections[matchingRoom].forEach((element) => {
           io.to(element).emit("chat-messages", data, sender, socket.id);
         });
       }
     });
 
-    // Event: when a user disconnects (leaves the call)
+    // Event: when a user disconnects
     socket.on("disconnect", () => {
-      // Calculate the time user was online (not currently used)
+      // (Optional) Calculate session duration
       var diffTime = Math.abs(timeOnLine[socket.id] - new Date());
       var key;
 
-      // Loop through all paths to find which room this socket belonged to
+      // Find which room the disconnected user belonged to
       for (const [k, v] of JSON.parse(
         JSON.stringify(Object.entries(connections))
       )) {
@@ -100,16 +109,16 @@ exports.connectToSocket = (server) => {
           if (v[a] == socket.id) {
             key = k;
 
-            // Notify others in the room that the user left
+            // Inform other users in the room
             for (let a = 0; a < connections[key].length; a++) {
               io.to(connections[key][a]).emit("user-left", socket.id);
             }
 
-            // Remove the socket from the room
+            // Remove user from the connection list
             var index = connections[key].indexOf(socket.id);
             connections[key].splice(index, 1);
 
-            // If no one is left in the room, delete it
+            // If room is empty, delete it
             if (connections[key].length === 0) {
               delete connections[key];
             }
