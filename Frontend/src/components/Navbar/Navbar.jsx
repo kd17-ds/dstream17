@@ -2,13 +2,13 @@ import logo from "../../assets/logo.png";
 
 export default function Navbar() {
     return (
-        <nav className="navbar navbar-expand-lg navbar-dark py-0" style={{ backgroundColor: "#050304", height: "80px" }}>
-            <div className="container-fluid">
-                <a className="navbar-brand py-0" href="#">
-                    <img src={logo} alt="DStream Logo" />
+        <nav className="bg-black h-20 flex items-center">
+            <div className="container mx-auto px-4 flex items-center justify-between">
+                <a href="#" className="flex items-center py-0">
+                    <img src={logo} alt="DStream Logo" className="h-10" />
                 </a>
                 <button
-                    className="navbar-toggler"
+                    className="lg:hidden text-white focus:outline-none"
                     type="button"
                     data-bs-toggle="collapse"
                     data-bs-target="#navbarNav"
@@ -16,23 +16,23 @@ export default function Navbar() {
                     aria-expanded="false"
                     aria-label="Toggle navigation"
                 >
-                    <span className="navbar-toggler-icon"></span>
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                        <path d="M4 5h16M4 12h16M4 19h16" />
+                    </svg>
                 </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav ms-auto">
-                        <li className="nav-item">
-                            <a className="nav-link active" aria-current="page" href="#">Home</a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">Features</a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">Pricing</a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">About</a>
-                        </li>
-                    </ul>
+                <div className="hidden lg:flex space-x-6 items-center" id="navbarNav">
+                    <a href="#" className="text-white font-medium hover:text-gray-300">
+                        Home
+                    </a>
+                    <a href="#" className="text-white font-medium hover:text-gray-300">
+                        Features
+                    </a>
+                    <a href="#" className="text-white font-medium hover:text-gray-300">
+                        Pricing
+                    </a>
+                    <a href="#" className="text-white font-medium hover:text-gray-300">
+                        About
+                    </a>
                 </div>
             </div>
         </nav>
