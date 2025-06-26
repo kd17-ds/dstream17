@@ -35,18 +35,18 @@ const socialLinks = [
 
 export default function Footer() {
     return (
-        <footer className="bg-black text-white py-8 px-4">
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between">
+        <footer className="fixed bottom-0 bg-white w-full text-black py-4 px-14">
+            <div className="flex flex-col md:flex-row items-center justify-between">
                 {/* Left - Name */}
                 <div className="text-center md:text-left mb-4 md:mb-0">
-                    <h1 className="text-2xl font-bold">D.S</h1>
-                    <p className="text-sm text-gray-400">
+                    <h1 className="text-3xl text-sec font-bold">D.S</h1>
+                    <p className="text-md text-black">
                         Divyansh Sharma © All rights reserved.
                     </p>
                 </div>
 
                 {/* Right - Dynamic Social Icons */}
-                <div className="flex space-x-4 justify-center">
+                <div className="flex space-x-4 justify-center px-4">
                     {socialLinks.map((link, index) => (
                         <a
                             key={index}
@@ -57,7 +57,7 @@ export default function Footer() {
                             <img
                                 src={link.imgSrc}
                                 alt={link.alt}
-                                className="h-6 w-6 hover:scale-110 transition"
+                                className="h-7 w-7 hover:scale-110 transition"
                             />
                         </a>
                     ))}

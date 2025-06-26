@@ -1,4 +1,5 @@
 import mobile from "../assets/mobile.png";
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
     return (
@@ -15,9 +16,10 @@ export default function HomePage() {
                         Share Freely. <br /> Collaborate Anywhere.
                     </h1>
                     <p className="mt-5 text-xl">Talk. Share. Get Things Done — Together</p>
-                    <button className="mt-6 px-6 py-2 font-bold border-2 border-amber-500 text-amber-500 rounded hover:cursor-pointer hover:bg-amber-500 hover:text-white transition">
+                    <Link to={"/login"}><button className="mt-6 px-6 py-2 font-bold border-2 border-amber-500 text-amber-500 rounded hover:cursor-pointer hover:bg-amber-500 hover:text-white transition">
                         Get Started
                     </button>
+                    </Link>
                 </div>
                 {/* Image Block */}
                 <div>
