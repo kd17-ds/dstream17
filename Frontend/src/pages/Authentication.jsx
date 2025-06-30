@@ -119,7 +119,7 @@ export default function Authentication({ formType }) {
                         <button
                             type="button"
                             onClick={handleAuth}
-                            className="w-full bg-sec text-white py-2 rounded hover:bg-purple-700 transition hover:cursor-pointer"
+                            className="w-full bg-sec text-white py-2 rounded hover:bg-lite transition hover:cursor-pointer"
                         >
                             {formState === 0 ? "Login" : "Register"}
                         </button>

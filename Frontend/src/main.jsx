@@ -5,6 +5,7 @@ import MainLayout from './layout/MainLayout';
 import HomePage from './pages/HomePage';
 import Authentication from './pages/Authentication';
 import { AuthProvider } from './contexts/AuthContext';
+import Meet from './pages/Meet';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path='/' element={<HomePage />} />
           <Route path="/login" element={<Authentication formType="login" />} />
           <Route path="/signup" element={<Authentication formType="signup" />} />
+          <Route path="/:url" element={<Meet />} />
         </Route>
       </Routes>
     </AuthProvider>
