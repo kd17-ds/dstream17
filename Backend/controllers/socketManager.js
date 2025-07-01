@@ -19,6 +19,7 @@ exports.connectToSocket = (server) => {
 
   // Handle new WebSocket connection
   io.on("connection", (socket) => {
+    console.log("SOMETHING CONNNECTED");
     // Event: when a user accepts a call and joins a specific room/path
     socket.on("accept-call", (path) => {
       // Create an array for the path if it doesn't exist
