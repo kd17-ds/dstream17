@@ -1,31 +1,39 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react"; // Importing necessary hooks from React
 import { BASE_URL } from "../constants/constants";
-import { io } from "socket.io-client";
+import { io } from "socket.io-client"; // Importing the function to connect to the backend socket server for real-time communication
 
-var connections = {};
+const connections = {}; // Stores all connected users' call links (WebRTC connections)
 
+// This is the configuration for creating WebRTC connections."iceServers" helps devices find and connect to each other over the internet.
+// STUN (Session Traversal Utilities for NAT) helps a device know its public IP address, which is important when users are behind different Wi-Fi routers or firewalls.
 const peerConfigConnections = {
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
 };
 
 export default function Meet() {
-    var socketRef = useRef();
-    let socketIdRef = useRef();
-    let localVideoref = useRef();
-    let [videoAvailable, setVideoAvailable] = useState(true);
-    let [audioAvailable, setAudioAvailable] = useState(true);
-    let [video, setVideo] = useState([]);
-    let [audio, setAudio] = useState();
-    let [screen, setScreen] = useState();
-    let [showModal, setModal] = useState(true);
-    let [screenAvailable, setScreenAvailable] = useState();
-    let [messages, setMessages] = useState([]);
-    let [message, setMessage] = useState("");
-    let [newMessages, setNewMessages] = useState(3);
-    let [askForUsername, setAskForUsername] = useState(true);
-    let [username, setUsername] = useState("");
-    const videoRef = useRef([]);
-    let [videos, setVideos] = useState([]);
+
+    const socketRef = useRef(); // Stores the live socket connection of your own device for sending/receiving events
+    const socketIdRef = useRef(); // Stores our unique socket ID given by the server
+    const localVideoref = useRef(); // Refers to the video element showing your own webcam stream
+
+    const [videoAvailable, setVideoAvailable] = useState(true); // Tracks if camera permissions are available
+    const [audioAvailable, setAudioAvailable] = useState(true); // Tracks if microphone permissions are available
+    const [screenAvailable, setScreenAvailable] = useState(true); // Tracks if screen sharing is supported by the browser
+
+    const [video, setVideo] = useState(true); // Tracks whether your camera is currently on or off
+    const [audio, setAudio] = useState(true); // Tracks whether your microphone is currently on or off
+    const [screen, setScreen] = useState(false); // Tracks whether screen sharing is currently on or off
+
+    const [showModal, setModal] = useState(true); // Controls whether the chat modal is open or hidden
+    const [messages, setMessages] = useState([]); // Stores the list of all chat messages in the conversation
+    const [message, setMessage] = useState(""); // Tracks the current message being typed in the input box
+    const [newMessages, setNewMessages] = useState(0); // Counts how many new/unread chat messages arrived while chat is closed
+
+    const [askForUsername, setAskForUsername] = useState(true); // Controls whether the username lobby screen is shown before joining the meet
+    const [username, setUsername] = useState(""); // Stores the name entered by the user to identify them in chat and video
+
+    const videoRef = useRef([]); // Keeps a real-time reference to the videos array for instant access
+    const [videos, setVideos] = useState([]); // Stores video stream info of all other connected users
 
     useEffect(() => {
         console.log("HELLO");
