@@ -36,9 +36,80 @@ export default function Meet() {
     const [videos, setVideos] = useState([]); // Stores video stream info of all other connected users
 
     useEffect(() => {
-        console.log("HELLO");
-        getPermissions();
-    });
+        console.log("Requesting camera and microphone permissions...");
+        getPermissions(); // ask just once when user enters the room
+    }, []);
+
+    const getPermissions = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); // Request access to both webcam and microphone from the user
+
+            const hasVideo = stream.getVideoTracks().length > 0; // Check if at least one video track (camera) is available
+            const hasAudio = stream.getAudioTracks().length > 0; // Check if at least one audio track (mic) is available
+
+            setVideoAvailable(hasVideo); // Save video availability in state and log the result
+            console.log(`Camera permission ${hasVideo ? "granted" : "denied"}`);
+
+            setAudioAvailable(hasAudio); // Save audio availability in state and log the result
+            console.log(`Microphone permission ${hasAudio ? "granted" : "denied"}`);
+
+            setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia); // Check if screen sharing is supported by the browser
+
+            // If any media (video or audio) is allowed, request the appropriate stream
+            if (videoAvailable || audioAvailable) {
+                // Get the stream based on what the user allowed (only video, only audio, or both)
+                const userMediaStream = await navigator.mediaDevices.getUserMedia({
+                    video: videoAvailable,
+                    audio: audioAvailable,
+                });
+                if (userMediaStream) {
+                    window.localStream = userMediaStream;  // Store the stream globally so it can be shared with other users via WebRTC
+                    // Attach the stream to your local video element so you can see yourself on screen
+                    if (localVideoref.current) {
+                        localVideoref.current.srcObject = userMediaStream;
+                    }
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const connect = () => {
+        setAskForUsername(false);  // Hides the username input screen
+        getMedia();                // Begins media + socket setup
+    };
+
+    const getMedia = () => {
+        setVideo(videoAvailable);  // Turn on/off your video based on permission
+        setAudio(audioAvailable);  // Turn on/off your audio based on permission
+        connectToSocketServer();  // Establish socket connection and start signaling
+    };
+
+    useEffect(() => {
+        // Run this only after both video and audio states are set (true/false)
+        if (video !== undefined && audio !== undefined) {
+            console.log("🎥 Permissions set - Video:", video, "| 🎙️ Audio:", audio);
+            getUserMedia(); // Start accessing camera/mic based on updated state
+        }
+    }, [video, audio]);
+
+
+    const getUserMedia = () => {
+        if ((video && videoAvailable) || (audio && audioAvailable)) {
+            navigator.mediaDevices
+                .getUserMedia({ video: video, audio: audio })
+                .then(getUserMediaSuccess)
+                .then((stream) => { })
+                .catch((e) => console.log(e));
+        } else {
+            try {
+                let tracks = localVideoref.current.srcObject.getTracks();
+                tracks.forEach((track) => track.stop());
+            } catch (e) { }
+        }
+    };
+
 
     let getDislayMedia = () => {
         if (screen) {
@@ -52,62 +123,6 @@ export default function Meet() {
         }
     };
 
-    const getPermissions = async () => {
-        try {
-            const videoPermission = await navigator.mediaDevices.getUserMedia({ video: true });
-            if (videoPermission) {
-                setVideoAvailable(true);
-                console.log("Video permission granted");
-            } else {
-                setVideoAvailable(false);
-                console.log("Video permission denied");
-            }
-
-            const audioPermission = await navigator.mediaDevices.getUserMedia({ audio: true });
-            if (audioPermission) {
-                setAudioAvailable(true);
-                console.log("Audio permission granted");
-            } else {
-                setAudioAvailable(false);
-                console.log("Audio permission denied");
-            }
-
-            if (navigator.mediaDevices.getDisplayMedia) {
-                setScreenAvailable(true);
-            } else {
-                setScreenAvailable(false);
-            }
-
-            if (videoAvailable || audioAvailable) {
-                const userMediaStream = await navigator.mediaDevices.getUserMedia({
-                    video: videoAvailable,
-                    audio: audioAvailable,
-                });
-                if (userMediaStream) {
-                    window.localStream = userMediaStream;
-                    if (localVideoref.current) {
-                        localVideoref.current.srcObject = userMediaStream;
-                    }
-                }
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-
-    useEffect(() => {
-        if (video !== undefined && audio !== undefined) {
-            getUserMedia();
-            console.log("SET STATE HAS ", video, audio);
-        }
-    }, [video, audio]);
-
-    let getMedia = () => {
-        setVideo(videoAvailable);
-        setAudio(audioAvailable);
-        connectToSocketServer();
-    };
 
 
     let getUserMediaSuccess = (stream) => {
@@ -178,20 +193,7 @@ export default function Meet() {
         );
     };
 
-    let getUserMedia = () => {
-        if ((video && videoAvailable) || (audio && audioAvailable)) {
-            navigator.mediaDevices
-                .getUserMedia({ video: video, audio: audio })
-                .then(getUserMediaSuccess)
-                .then((stream) => { })
-                .catch((e) => console.log(e));
-        } else {
-            try {
-                let tracks = localVideoref.current.srcObject.getTracks();
-                tracks.forEach((track) => track.stop());
-            } catch (e) { }
-        }
-    };
+
 
     let getDislayMediaSuccess = (stream) => {
         console.log("HERE");
@@ -467,10 +469,7 @@ export default function Meet() {
         setMessage("");
     };
 
-    let connect = () => {
-        setAskForUsername(false);
-        getMedia();
-    };
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 lg:pb-3 pb-10">
